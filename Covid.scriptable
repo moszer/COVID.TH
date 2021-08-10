@@ -1,12 +1,316 @@
-{
-  "always_run_in_app" : false,
-  "icon" : {
-    "color" : "cyan",
-    "glyph" : "magic"
+const NF = new Intl.NumberFormat();
+const sizes = {
+  small: {
+    tiny: 8,
+    small: 10,
+    medium: 12,
+    large: 14,
+    hPadding: 10,
+    vPadding: 10,
   },
-  "name" : "Covid",
-  "script" : "const NF = new Intl.NumberFormat();\nconst sizes = {\n  small: {\n    tiny: 8,\n    small: 10,\n    medium: 12,\n    large: 14,\n    hPadding: 10,\n    vPadding: 10,\n  },\n  medium: {\n    tiny: 12,\n    small: 14,\n    medium: 18,\n    large: 24,\n    hPadding: 18,\n    vPadding: 2,\n  },\n  large: {\n    tiny: 16,\n    small: 20,\n    medium: 26,\n    large: 32,\n    hPadding: 20,\n    vPadding: 16,\n  },\n};\n\nconst apiUrl = \"https:\/\/pass.telekom.de\/api\/service\/generic\/v1\/status\"\n\nconst currentSize = sizes[config.widgetFamily] || sizes.large;\n\nconst covidData = await fetchCovidDataFromEasySunday();\nasync function fetchCovidDataFromThStat() {\n  let url = 'https:\/\/covid19.th-stat.com\/json\/covid19v2\/getTodayCases.json';\n  const req = new Request(url);\n  const response = await req.loadJSON();\n  return {\n    newConfirmed: response.NewConfirmed,\n    confirmed: response.Confirmed,\n    newDeaths: response.NewDeaths,\n    deaths: response.Deaths,\n    updateDate: response.UpdateDate,\n    recovered: response.Recovered,\n    hospitalized: response.Hospitalized,\n    newHospitalized: response.NewHospitalized,\n  };\n}\n\nasync function fetchCovidDataFromEasySunday() {\n  let url = 'https:\/\/static.easysunday.com\/covid-19\/getTodayCases.json';\n  const req = new Request(url);\n  const response = await req.loadJSON();\n  const ret = {\n    newConfirmed: response.NewConfirmed,\n    confirmed: response.Confirmed,\n    newDeaths: response.NewDeaths,\n    deaths: response.Deaths,\n    updateDate: response.UpdateDate,\n    recovered: response.Recovered,\n    hospitalized: response.Hospitalized,\n    newHospitalized: response.NewHospitalized,\n  };\n  return ret;\n}\n\nconst widget = new ListWidget();\nawait createHeader();\nwidget.backgroundColor = Color.black();\nwidget.addSpacer(currentSize.hPadding);\nlet row1 = await widget.addStack();\nrow1.layoutHorizontally();\nawait addItem(row1, {\n  label: {\n    value: 'ติดเชื้อเพิ่มวันน้ี🧍',\n    style: 'light',\n    fontSize: currentSize.medium,\n    color: '#FFFFFF',\n  },\n  value: {\n    value: '+' + covidData.newConfirmed,\n    style: 'bold-mono',\n    fontSize: currentSize.large,\n    color: '#FF0000',\n  },\n});\nwidget.addSpacer(currentSize.vPadding);\nlet row2 = await widget.addStack();\nawait addItem(row2, {\n  label: {\n    value: 'เสียชีวิตวันน้ี💀',\n    style: 'light',\n    fontSize: currentSize.small,\n    color: '#FFFFFF',\n  },\n  value: {\n    value: '+' + covidData.newDeaths,\n    style: 'bold',\n    fontSize: currentSize.medium,\n    color: '#9004e0',\n  },\n});\nrow2.addSpacer();\nawait addItem(row2, {\n  label: {\n    value: 'เข้ารักษาใหม่❤️‍🩹',\n    style: 'light',\n    fontSize: currentSize.small,\n    color: '#FFFFFF',\n  },\n  value: {\n    value: '+'+covidData.newHospitalized,\n    style: 'bold',\n    fontSize: currentSize.medium,\n    color: '#bd3b04',\n  },\n});\nrow2.addSpacer();\nwidget.addSpacer(currentSize.vPadding);\n\nif (config.widgetFamily !== 'medium') {\n  let row3 = await widget.addStack();\n  row3.layoutHorizontally();\n  await addItem(row3, {\n    label: {\n      value: 'ติดเชื้อทั้งหมด🦠',\n      style: 'light',\n      fontSize: currentSize.tiny,\n      color: '#FFFFFF',\n    },\n    value: {\n      value: covidData.confirmed,\n      style: 'regular',\n      fontSize: currentSize.small,\n      color: '#FF6D67',\n    },\n  });\n  row3.addSpacer();\n  await addItem(row3, {\n    label: {\n      value: 'เสียชีวิตรวม🪦',\n      style: 'light',\n      fontSize: currentSize.tiny,\n      color: '#FFFFFF',\n    },\n    value: {\n      value: covidData.deaths,\n      style: 'regular',\n      fontSize: currentSize.small,\n      color: '#FF6D67',\n    },\n  });\n  row3.addSpacer();\n  await addItem(row3, {\n    label: {\n      value: 'กำลังรักษาอยู่🏥',\n      style: 'light',\n      fontSize: currentSize.tiny,\n      color: '#FFFFFF',\n    },\n    value: {\n      value: covidData.hospitalized,\n      style: 'regular',\n      fontSize: currentSize.small,\n      color: '#FF6D67',\n    },\n  });\n  row3.addSpacer();\n}\n\nwidget.setPadding(\n  currentSize.hPadding,\n  currentSize.hPadding,\n  currentSize.hPadding,\n  currentSize.hPadding\n);\nwidget.url = 'https:\/\/www.facebook.com\/mosaw.moszer';\nif (config.runsInApp) {\n  await widget.presentLarge();\n}\nScript.setWidget(widget);\nScript.complete();\n\nasync function createHeader() {\n  let icon = widget.addStack();\n  const coin = await getImage('￼');\n  if (coin) {\n    const coinImg = icon.addImage(coin);\n    coinImg.imageSize = new Size(currentSize.large, currentSize.large);\n  }\n  icon.layoutHorizontally();\n  icon.addSpacer(8);\n  let iconRow = icon.addStack();\n  iconRow.layoutVertically();\n  let iconText = iconRow.addStack();\n  let line0 = icon.addText('C')\n  let line1 = icon.addText('O')\n  let line2 = icon.addText('V')\n  let line3 = icon.addText('I')\n  let line4 = icon.addText('D')\n  let line5 = icon.addText(' T')\n  let line6 = icon.addText('h')\n  let line7 = icon.addText('a')\n  let line8 = icon.addText('i')\n  let line9 = icon.addText('l')\n  let line10 = icon.addText('a')\n  let line11 = icon.addText('n')\n  let line12 = icon.addText('d '    +covidData.updateDate.substring(0, 8)+'🇹🇭');\n  line0.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line0.textColor = new Color('#cf4644');\n  line1.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line1.textColor = new Color('#cf9044');\n  line2.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line2.textColor = new Color('#cfcc44');\n  line3.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line3.textColor = new Color('#5bcf44');\n  line4.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line4.textColor = new Color('#44cf69');\n  line5.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line5.textColor = new Color('#44cfb7');\n  line6.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line6.textColor = new Color('#4482cf');\n  line7.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line7.textColor = new Color('#4446cf');\n  line8.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line8.textColor = new Color('#7c44cf');\n  line9.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line9.textColor = new Color('#b744cf');\n  line10.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line10.textColor = new Color('#b744cf');\n  line11.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line11.textColor = new Color('#cf4487');\n  line12.font = Font.mediumRoundedSystemFont(currentSize.small);\n  line12.textColor = new Color('#cf445b');\n}\n\nasync function addItem(_row, _item) {\n  let itemRow = _row.addStack();\n  let line1 = itemRow.addText(_item.label.value.toString());\n  await setStyle(\n    line1,\n    _item.label.style,\n    _item.label.fontSize,\n    _item.label.color\n  );\n  itemRow.layoutVertically();\n  itemRow.addSpacer(2);\n  let val = _item.value.value;\n  if (Number(val) && Number(val) > 0) {\n    val = NF.format(val);\n    if (_item.value.value.toString().includes('+')) {\n      val = '+' + val;\n    }\n  }\n  let line2 = itemRow.addText(val.toString());\n  await setStyle(\n    line2,\n    _item.value.style,\n    _item.value.fontSize,\n    _item.value.color\n  );\n}\n\nasync function setStyle(obj, style, fontSize, color) {\n  if (style === 'light-mono') {\n    obj.font = Font.lightMonospacedSystemFont(fontSize);\n  } else if (style === 'medium-mono') {\n    obj.font = Font.mediumMonospacedSystemFont(fontSize);\n  } else if (style === 'regular-mono') {\n    obj.font = Font.regularMonospacedSystemFont(fontSize);\n  } else if (style === 'bold-mono') {\n    obj.font = Font.boldMonospacedSystemFont(fontSize);\n  } else if (style === 'light-round') {\n    obj.font = Font.lightRoundedSystemFont(fontSize);\n  } else if (style === 'medium-round') {\n    obj.font = Font.mediumRoundedSystemFont(fontSize);\n  } else if (style === 'regular-round') {\n    obj.font = Font.regularRoundedSystemFont(fontSize);\n  } else if (style === 'bold-round') {\n    obj.font = Font.boldRoundedSystemFont(fontSize);\n  } else if (style === 'light') {\n    obj.font = Font.lightSystemFont(fontSize);\n  } else if (style === 'medium') {\n    obj.font = Font.mediumSystemFont(fontSize);\n  } else if (style === 'regular') {\n    obj.font = Font.regularSystemFont(fontSize);\n  } else if (style === 'bold') {\n    obj.font = Font.boldSystemFont(fontSize);\n  }\n  if (color) {\n    obj.textColor = new Color(color);\n  }\n}\n\nasync function getImage(imageUrl) {\n  try {\n    let fm = FileManager.local();\n    let dir = fm.documentsDirectory();\n    let imgSplit = imageUrl.split('\/');\n    let path = fm.joinPath(dir, imgSplit[imgSplit.length - 1]);\n    if (fm.fileExists(path)) {\n      return fm.readImage(path);\n    } else {\n      let iconImage = await loadImage(imageUrl);\n      fm.writeImage(path, iconImage);\n      return iconImage;\n    }\n  } catch (e) {\n    console.log(e);\n  }\n}\n\nasync function loadImage(imgUrl) {\n  const req = new Request(imgUrl);\n  return await req.loadImage();\n}",
-  "share_sheet_inputs" : [
+  medium: {
+    tiny: 12,
+    small: 14,
+    medium: 18,
+    large: 24,
+    hPadding: 18,
+    vPadding: 2,
+  },
+  large: {
+    tiny: 16,
+    small: 20,
+    medium: 26,
+    large: 32,
+    hPadding: 20,
+    vPadding: 16,
+  },
+};
 
-  ]
+const apiUrl = "https://pass.telekom.de/api/service/generic/v1/status"
+
+const currentSize = sizes[config.widgetFamily] || sizes.large;
+
+const covidData = await fetchCovidDataFromEasySunday();
+async function fetchCovidDataFromThStat() {
+  let url = 'https://covid19.th-stat.com/json/covid19v2/getTodayCases.json';
+  const req = new Request(url);
+  const response = await req.loadJSON();
+  return {
+    newConfirmed: response.NewConfirmed,
+    confirmed: response.Confirmed,
+    newDeaths: response.NewDeaths,
+    deaths: response.Deaths,
+    updateDate: response.UpdateDate,
+    recovered: response.Recovered,
+    hospitalized: response.Hospitalized,
+    newHospitalized: response.NewHospitalized,
+  };
+}
+
+async function fetchCovidDataFromEasySunday() {
+  let url = 'https://static.easysunday.com/covid-19/getTodayCases.json';
+  const req = new Request(url);
+  const response = await req.loadJSON();
+  const ret = {
+    newConfirmed: response.NewConfirmed,
+    confirmed: response.Confirmed,
+    newDeaths: response.NewDeaths,
+    deaths: response.Deaths,
+    updateDate: response.UpdateDate,
+    recovered: response.Recovered,
+    hospitalized: response.Hospitalized,
+    newHospitalized: response.NewHospitalized,
+  };
+  return ret;
+}
+
+const widget = new ListWidget();
+await createHeader();
+widget.backgroundColor = Color.black();
+widget.addSpacer(currentSize.hPadding);
+let row1 = await widget.addStack();
+row1.layoutHorizontally();
+await addItem(row1, {
+  label: {
+    value: 'ติดเชื้อเพิ่มวันน้ี🧍',
+    style: 'light',
+    fontSize: currentSize.medium,
+    color: '#FFFFFF',
+  },
+  value: {
+    value: '+' + covidData.newConfirmed,
+    style: 'bold-mono',
+    fontSize: currentSize.large,
+    color: '#FF0000',
+  },
+});
+widget.addSpacer(currentSize.vPadding);
+let row2 = await widget.addStack();
+await addItem(row2, {
+  label: {
+    value: 'เสียชีวิตวันน้ี💀',
+    style: 'light',
+    fontSize: currentSize.small,
+    color: '#FFFFFF',
+  },
+  value: {
+    value: '+' + covidData.newDeaths,
+    style: 'bold',
+    fontSize: currentSize.medium,
+    color: '#9004e0',
+  },
+});
+row2.addSpacer();
+await addItem(row2, {
+  label: {
+    value: 'เข้ารักษาใหม่❤️‍🩹',
+    style: 'light',
+    fontSize: currentSize.small,
+    color: '#FFFFFF',
+  },
+  value: {
+    value: '+'+covidData.newHospitalized,
+    style: 'bold',
+    fontSize: currentSize.medium,
+    color: '#bd3b04',
+  },
+});
+row2.addSpacer();
+widget.addSpacer(currentSize.vPadding);
+
+if (config.widgetFamily !== 'medium') {
+  let row3 = await widget.addStack();
+  row3.layoutHorizontally();
+  await addItem(row3, {
+    label: {
+      value: 'ติดเชื้อทั้งหมด🦠',
+      style: 'light',
+      fontSize: currentSize.tiny,
+      color: '#FFFFFF',
+    },
+    value: {
+      value: covidData.confirmed,
+      style: 'regular',
+      fontSize: currentSize.small,
+      color: '#FF6D67',
+    },
+  });
+  row3.addSpacer();
+  await addItem(row3, {
+    label: {
+      value: 'เสียชีวิตรวม🪦',
+      style: 'light',
+      fontSize: currentSize.tiny,
+      color: '#FFFFFF',
+    },
+    value: {
+      value: covidData.deaths,
+      style: 'regular',
+      fontSize: currentSize.small,
+      color: '#FF6D67',
+    },
+  });
+  row3.addSpacer();
+  await addItem(row3, {
+    label: {
+      value: 'กำลังรักษาอยู่🏥',
+      style: 'light',
+      fontSize: currentSize.tiny,
+      color: '#FFFFFF',
+    },
+    value: {
+      value: covidData.hospitalized,
+      style: 'regular',
+      fontSize: currentSize.small,
+      color: '#FF6D67',
+    },
+  });
+  row3.addSpacer();
+}
+
+widget.setPadding(
+  currentSize.hPadding,
+  currentSize.hPadding,
+  currentSize.hPadding,
+  currentSize.hPadding
+);
+widget.url = 'https://www.facebook.com/mosaw.moszer';
+if (config.runsInApp) {
+  await widget.presentLarge();
+}
+Script.setWidget(widget);
+Script.complete();
+
+async function createHeader() {
+  let icon = widget.addStack();
+  const coin = await getImage('');
+  if (coin) {
+    const coinImg = icon.addImage(coin);
+    coinImg.imageSize = new Size(currentSize.large, currentSize.large);
+  }
+  icon.layoutHorizontally();
+  icon.addSpacer(8);
+  let iconRow = icon.addStack();
+  iconRow.layoutVertically();
+  let iconText = iconRow.addStack();
+  let line0 = icon.addText('C')
+  let line1 = icon.addText('O')
+  let line2 = icon.addText('V')
+  let line3 = icon.addText('I')
+  let line4 = icon.addText('D')
+  let line5 = icon.addText(' T')
+  let line6 = icon.addText('h')
+  let line7 = icon.addText('a')
+  let line8 = icon.addText('i')
+  let line9 = icon.addText('l')
+  let line10 = icon.addText('a')
+  let line11 = icon.addText('n')
+  let line12 = icon.addText('d '    +covidData.updateDate.substring(0, 8)+'🇹🇭');
+  line0.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line0.textColor = new Color('#cf4644');
+  line1.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line1.textColor = new Color('#cf9044');
+  line2.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line2.textColor = new Color('#cfcc44');
+  line3.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line3.textColor = new Color('#5bcf44');
+  line4.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line4.textColor = new Color('#44cf69');
+  line5.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line5.textColor = new Color('#44cfb7');
+  line6.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line6.textColor = new Color('#4482cf');
+  line7.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line7.textColor = new Color('#4446cf');
+  line8.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line8.textColor = new Color('#7c44cf');
+  line9.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line9.textColor = new Color('#b744cf');
+  line10.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line10.textColor = new Color('#b744cf');
+  line11.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line11.textColor = new Color('#cf4487');
+  line12.font = Font.mediumRoundedSystemFont(currentSize.small);
+  line12.textColor = new Color('#cf445b');
+}
+
+async function addItem(_row, _item) {
+  let itemRow = _row.addStack();
+  let line1 = itemRow.addText(_item.label.value.toString());
+  await setStyle(
+    line1,
+    _item.label.style,
+    _item.label.fontSize,
+    _item.label.color
+  );
+  itemRow.layoutVertically();
+  itemRow.addSpacer(2);
+  let val = _item.value.value;
+  if (Number(val) && Number(val) > 0) {
+    val = NF.format(val);
+    if (_item.value.value.toString().includes('+')) {
+      val = '+' + val;
+    }
+  }
+  let line2 = itemRow.addText(val.toString());
+  await setStyle(
+    line2,
+    _item.value.style,
+    _item.value.fontSize,
+    _item.value.color
+  );
+}
+
+async function setStyle(obj, style, fontSize, color) {
+  if (style === 'light-mono') {
+    obj.font = Font.lightMonospacedSystemFont(fontSize);
+  } else if (style === 'medium-mono') {
+    obj.font = Font.mediumMonospacedSystemFont(fontSize);
+  } else if (style === 'regular-mono') {
+    obj.font = Font.regularMonospacedSystemFont(fontSize);
+  } else if (style === 'bold-mono') {
+    obj.font = Font.boldMonospacedSystemFont(fontSize);
+  } else if (style === 'light-round') {
+    obj.font = Font.lightRoundedSystemFont(fontSize);
+  } else if (style === 'medium-round') {
+    obj.font = Font.mediumRoundedSystemFont(fontSize);
+  } else if (style === 'regular-round') {
+    obj.font = Font.regularRoundedSystemFont(fontSize);
+  } else if (style === 'bold-round') {
+    obj.font = Font.boldRoundedSystemFont(fontSize);
+  } else if (style === 'light') {
+    obj.font = Font.lightSystemFont(fontSize);
+  } else if (style === 'medium') {
+    obj.font = Font.mediumSystemFont(fontSize);
+  } else if (style === 'regular') {
+    obj.font = Font.regularSystemFont(fontSize);
+  } else if (style === 'bold') {
+    obj.font = Font.boldSystemFont(fontSize);
+  }
+  if (color) {
+    obj.textColor = new Color(color);
+  }
+}
+
+async function getImage(imageUrl) {
+  try {
+    let fm = FileManager.local();
+    let dir = fm.documentsDirectory();
+    let imgSplit = imageUrl.split('/');
+    let path = fm.joinPath(dir, imgSplit[imgSplit.length - 1]);
+    if (fm.fileExists(path)) {
+      return fm.readImage(path);
+    } else {
+      let iconImage = await loadImage(imageUrl);
+      fm.writeImage(path, iconImage);
+      return iconImage;
+    }
+  } catch (e) {
+    console.log(e);
+  }
+}
+
+async function loadImage(imgUrl) {
+  const req = new Request(imgUrl);
+  return await req.loadImage();
 }
